@@ -100,25 +100,34 @@ As for the core feature implementation the first draft of the plan is very simpl
 
 1. Acquire "source" and "replica" directory structure including nested directories and files; generate checksum for each file
 2. Compare both of these directories generating actions to be executed based on the state of both directories:
+```
 ADD_DIRECTORY which internally creates directory in "replica"
 REMOVE_DIRECTORY which internally removes directory from "replica"
+```
 the directory actions are created based on these rules:
+```
 a) a directory that exists in directory "source" and doesn't exist in directory "replica" generates action ADD_DIRECTORY
 b) a directory that does not exist in directory "source" and exists in directory "replica" generates action REMOVE_DIRECTORY
 c) a directory that exists in directory "source" and exists in directory "replica" generates no actions
-
+```
+```
 ADD_FILE which internally copies the file from "source" to "replica" overwriting if needed,
 REMOVE_FILE which internally removes the file from "replica"
+```
 the file actions are created based on these rules:
+```
 a) a file that exists in directory "source" and doesn't exist in directory "replica" generates action ADD_FILE
 b) a file that does not exist in directory "source" and exists in directory "replica" generates action REMOVE_FILE
 c) a file that exists in directory "source" and exists in directory "replica" with different checksums generates action REMOVE_FILE and ADD_FILE
 d) a file that exists in directory "source" and exists in directory "replica" with matching checksums generates no actions
+```
 3. Execute the actions in order, file actions in the same order can be parallelized, directory actions with different roots can be parallelized:
+```
 first ADD_DIRECTORY
 second REMOVE_FILE
 third ADD_FILE
 fourth REMOVE_DIRECTORY
+```
 
 This makes it possible to perform all of the actions that are needed to synchronize these directories and does not generate any metadata that needs to be kept.
 This also ensures that there is no quirky behavior for the user like with for example GIT where empty directories wouldn't be copied or untracked files would stay.

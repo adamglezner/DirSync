@@ -1,5 +1,3 @@
-
-
 using DirSync.Core.SyncCommands;
 
 namespace DirSync.Tests;

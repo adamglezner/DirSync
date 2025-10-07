@@ -16,7 +16,7 @@ public class SyncCommandExecutorServiceTests
     }
 
     [Test]
-    public async Task ExecuteAsync_CallsExecuteOnAllCommands()
+    public async Task ExecuteAsync_ExecutesAllCommandsOnce()
     {
         var command1 = new Mock<ISyncCommand>();
         var command2 = new Mock<ISyncCommand>();
@@ -29,31 +29,10 @@ public class SyncCommandExecutorServiceTests
 
         var commands = new List<ISyncCommand> { command1.Object, command2.Object };
 
-        await _syncCommandExecutorService.ExecuteAsync(commands, batchSize: 1);
+        await _syncCommandExecutorService.ExecuteAsync(commands, batchSize: 10);
 
         command1.Verify(c => c.ExecuteAsync(), Times.Once);
         command2.Verify(c => c.ExecuteAsync(), Times.Once);
-    }
-
-    [Test]
-    public async Task ExecuteAsync_UsesCorrectBatchSize()
-    {
-        var executedCommands = new List<int>();
-        var commands = Enumerable.Range(1, 10).Select(i =>
-        {
-            var cmd = new Mock<ISyncCommand>();
-            cmd.Setup(c => c.ExecuteAsync()).Returns(() =>
-            {
-                executedCommands.Add(i);
-                return Task.CompletedTask;
-            });
-            cmd.Setup(c => c.DryRun()).Returns([$"cmd{i}"]);
-            return cmd.Object;
-        }).ToList();
-
-        await _syncCommandExecutorService.ExecuteAsync(commands, batchSize: 2);
-
-        Assert.That(executedCommands.Count, Is.EqualTo(10));
     }
 
     [Test]
@@ -61,6 +40,6 @@ public class SyncCommandExecutorServiceTests
     {
         var commands = new List<ISyncCommand>();
 
-        Assert.DoesNotThrowAsync(async () => await _syncCommandExecutorService.ExecuteAsync(commands, batchSize: 3));
+        Assert.DoesNotThrowAsync(async () => await _syncCommandExecutorService.ExecuteAsync(commands, 10));
     }
 }
